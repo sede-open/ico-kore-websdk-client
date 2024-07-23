@@ -60,7 +60,6 @@
                 data: { url: options.userUrl },
                 dataType: 'json',
                 success: function (data) {
-                    console.log(data);
                     options.botInfo = data;
                     // TODO: Move the bot_title override to the server side
                     options.botInfo.customData.bot_title = options.override_bot_title || data.customData.bot_title;
@@ -79,7 +78,7 @@
             chatConfig.botOptions.botInfo = await getBotInfo(chatConfig.botOptions);
             chatConfig.botOptions.assertionFn = assertion;
             chatConfig.botOptions.jwtgrantSuccessCB = onJWTGrantSuccess;
-            var koreBot = koreBotChat();
+            koreBot = koreBotChat(); // koreBot variable initialized before the function is called
             koreBot.show(chatConfig);
             $('.openChatWindow').click(function () {
                 koreBot.show(chatConfig);

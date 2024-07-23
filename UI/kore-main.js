@@ -2,17 +2,10 @@
 
     $(document).ready(function () {
         function assertion(options, callback) {
-            var jsonData = {
-                "clientId": options.clientId,
-                "clientSecret": options.clientSecret,
-                "identity": options.userIdentity,
-                "aud": "",
-                "isAnonymous": false
-            };
             $.ajax({
                 url: options.JWTUrl,
-                type: 'post',
-                data: jsonData,
+                type: 'get',
+                data: options.botInfo,
                 dataType: 'json',
                 success: function (data) {
                     options.assertion = data.jwt;
@@ -59,14 +52,42 @@
         function onJWTGrantSuccess(options){
             getBrandingInformation(options);
         }
-        var chatConfig=window.KoreSDK.chatConfig;
-        chatConfig.botOptions.assertionFn=assertion;
-        chatConfig.botOptions.jwtgrantSuccessCB = onJWTGrantSuccess;
-        var koreBot = koreBotChat();
-        koreBot.show(chatConfig);
-        $('.openChatWindow').click(function () {
+
+        async function getBotInfo(options) {
+            await $.ajax({
+                url: options.botInfoUrl,
+                type: 'get',
+                data: { url: options.userUrl },
+                dataType: 'json',
+                success: function (data) {
+                    console.log(data);
+                    options.botInfo = data;
+                    options.brandingAPIUrl = options.koreAPIUrl + 'websdkthemes/' + options.botInfo._id + '/activetheme';
+                },
+                error: function (err) {
+                    console.log(err);
+                }
+            });
+            return options.botInfo;
+        }
+
+        // Wrap the dependent code in an async function
+        async function initializeChat() {
+            // Await the completion of getBotInfo before proceeding
+            chatConfig.botOptions.botInfo = await getBotInfo(chatConfig.botOptions);
+            chatConfig.botOptions.assertionFn = assertion;
+            chatConfig.botOptions.jwtgrantSuccessCB = onJWTGrantSuccess;
+            var koreBot = koreBotChat();
             koreBot.show(chatConfig);
-        });
+            $('.openChatWindow').click(function () {
+                koreBot.show(chatConfig);
+            });
+        }
+
+        var chatConfig = window.KoreSDK.chatConfig;
+        var koreBot;
+        // Call the async function to initialize the chat. This helps ensure getBotInfo is completed before initializing bot
+        initializeChat().catch(console.error); // Handle any errors that might occur during initialization
     });
 
 })(jQuery || (window.KoreSDK && window.KoreSDK.dependencies && window.KoreSDK.dependencies.jQuery));

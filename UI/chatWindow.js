@@ -1175,7 +1175,7 @@
                 me.config.botOptions.botInfo.name = this.escapeHTML(me.config.botOptions.botInfo.name);
                 me._botInfo = me.config.botOptions.botInfo;
                 me.config.botOptions.botInfo = { chatBot: me._botInfo.name, taskBotId: me._botInfo._id, customData: me._botInfo.customData, metaTags: me._botInfo.metaTags, tenanturl: me._botInfo.tenanturl };
-                var tempTitle = me._botInfo.name;
+                var tempTitle = me._botInfo.customData.bot_title || me._botInfo.name; // Set title to specified bot title, or bot name as fallback
                 me.config.chatTitle = me.config.botMessages.connecting;
                 if(me.config.multiPageApp && me.config.multiPageApp.enable){
                     var cwState=me.getLocalStoreItem('kr-cw-state');
@@ -1364,6 +1364,19 @@
                 var me = this;
                 me.bindCustomEvents();
                 var _chatContainer = me.config.chatContainer;
+
+                // Function to send message to BotKit during events
+                function sendEventMessage(body_text) {
+                    // Send close event to BotKit
+                    console.log("Event " + body_text + " clicked");
+                    var message_to_bot = {
+                        resourceid: "/bot.clientEvent",
+                        customEvent: { web_sdk: body_text },
+                        message: { body: body_text, type: "text" }
+                    };
+                    me.bot.sendMessage(message_to_bot);
+                }
+
                 _chatContainer.draggable({
                     handle: _chatContainer.find(".kore-chat-header .header-title"),
                     containment: "document",
@@ -1664,6 +1677,8 @@
                 });
 
                 _chatContainer.off('click', '.close-btn').on('click', '.close-btn', function (event) {
+                    // Send close event to BotKit
+                    sendEventMessage("close_button_event");
                     $('.recordingMicrophone').trigger('click');
                     if (ttsAudioSource) {
                         ttsAudioSource.stop();
@@ -1684,6 +1699,8 @@
                 });
 
                 _chatContainer.off('click', '.minimize-btn').on('click', '.minimize-btn', function (event) {
+                    // Send minimize event to BotKit
+                    sendEventMessage("minimize_button_event");
                     if(me.config.multiPageApp && me.config.multiPageApp.enable){
                         me.setLocalStoreItem('kr-cw-state','minimized');
                     }
@@ -1869,6 +1886,8 @@
                 });
 
                 _chatContainer.off('click', '.reload-btn').on('click', '.reload-btn', function (event,data) {
+                    // Send reconnect event to BotKit
+                    sendEventMessage("reconnect_button_event")
                     chatInitialize.stopSpeaking();
                     if(data && data.isReconnect){
                         me.config.botOptions.forceReconnecting=true;
@@ -3213,7 +3232,7 @@
 
             var chatWindowTemplate = '<script id="chat_window_tmpl" type="text/x-jqury-tmpl"> \
                 <div class="kore-chat-window droppable liteTheme-one"> \
-                <div class="kr-wiz-menu-chat defaultTheme-kore">\
+                <div class="kr-wiz-menu-chat hide defaultTheme-kore">\
                 </div>	\
                     <div class="minimized-title"></div> \
                     <div class="minimized"><span class="messages"></span></div> \
@@ -4147,11 +4166,20 @@
                 }
             }*/
             window.onbeforeunload = function () {
-                if (chatInitialize && $(chatInitialize.config.chatContainer).length > 0) {
-                    chatInitialize.stopSpeaking();
-                    chatInitialize.destroy();
-                    //return null;
-                }
+                var message_to_bot = {
+                    resourceid: "/bot.clientEvent",
+                    customEvent: { web_sdk: "close_browser_event" },
+                    message: { body: "close_browser_event", type: "text" }
+                };
+
+                bot.sendMessage(message_to_bot, () => {
+                    console.log("close_browser_event");
+                    if (chatInitialize && $(chatInitialize.config.chatContainer).length > 0) {
+                        chatInitialize.stopSpeaking();
+                        chatInitialize.destroy();
+                        //return null;
+                    }
+                })
             }
             this.addListener = function (evtName, trgFunc) {
                 if (!_eventQueue) {

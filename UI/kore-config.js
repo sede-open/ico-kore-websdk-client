@@ -4,7 +4,7 @@
 
     var botOptions = {};
     botOptions.logLevel = 'debug';
-    botOptions.koreAPIUrl = "https://bots.kore.ai/api/";
+    botOptions.koreAPIUrl = "https://de-bots.kore.ai/api/";
     botOptions.koreSpeechAPIUrl = "";//deprecated
     //botOptions.bearer = "bearer xyz-------------------";
     //botOptions.ttsSocketUrl = '';//deprecated
@@ -20,9 +20,16 @@
         }
     }
 
-    botOptions.JWTUrl = "PLEASE_ENTER_JWTURL_HERE";
+    //// Get the endPint Url Based on user Input
+    const endPointUrlData = window.location || document.URL;
+    botOptions.userUrl = endPointUrlData.href;
+
+    botOptions.baseURL = "https://shell-dev-botkit.kore.ai/shell-dev";
+    // botOptions.baseURL = "http://localhost:8080";
+    botOptions.JWTUrl = botOptions.baseURL + "/generate-token";
+    botOptions.botInfoUrl = botOptions.baseURL + "/get-bot-info";
+
     botOptions.userIdentity = 'PLEASE_ENTER_USER_EMAIL_ID';// Provide users email id here
-    botOptions.botInfo = { name: "PLEASE_ENTER_BOT_NAME", "_id": "PLEASE_ENTER_BOT_ID" }; // bot name is case sensitive
 
     /* 
     Important Note: These keys are provided here for quick demos to generate JWT token at client side but not for Production environment.
@@ -31,7 +38,6 @@
     **/
     botOptions.clientId = "PLEASE_ENTER_CLIENT_ID";
     botOptions.clientSecret = "PLEASE_ENTER_CLIENT_SECRET";
-    botOptions.brandingAPIUrl = botOptions.koreAPIUrl +'websdkthemes/'+  botOptions.botInfo._id+'/activetheme';
     botOptions.enableThemes = true;
 // for webhook based communication use following option 
 // botOptions.webhookConfig={
@@ -51,10 +57,10 @@
     var chatConfig={
         botOptions:botOptions,
         allowIframe: false, 			// set true, opens authentication links in popup window, default value is "false"
-        isSendButton: false, 			// set true, to show send button below the compose bar
-        isTTSEnabled: true,			// set true, to show speaker icon
+        isSendButton: true, 			// set true, to show send button below the compose bar
+        isTTSEnabled: false,			// set true, to show speaker icon
         ttsInterface:'webapi',          // webapi or awspolly , where default is webapi
-        isSpeechEnabled: true,			// set true, to show mic icon
+        isSpeechEnabled: false,			// set true, to show mic icon
         stt:{
             vendor: 'webapi',           //'webapi'|'azure'|'google' //uses respective settings from the following keys and uncomments respective files in index.html
             azure:{
@@ -70,8 +76,8 @@
             recognitionLanguage: 'en-US'
            }
         },
-        allowLocation: true,			// set false, to deny sending location to server
-        loadHistory: true,				// set true to load recent chat history
+        allowLocation: false,			// set false, to deny sending location to server
+        loadHistory: false,				// set true to load recent chat history
         messageHistoryLimit: 10,		// set limit to load recent chat history
         autoEnableSpeechAndTTS: false, 	// set true, to use talkType voice keyboard.
         graphLib: "d3" ,				// set google, to render google charts.This feature requires loader.js file which is available in google charts documentation.

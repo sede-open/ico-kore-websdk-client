@@ -62,6 +62,8 @@
                 success: function (data) {
                     console.log(data);
                     options.botInfo = data;
+                    // TODO: Move the bot_title override to the server side
+                    options.botInfo.customData.bot_title = options.override_bot_title || data.customData.bot_title;
                     options.brandingAPIUrl = options.koreAPIUrl + 'websdkthemes/' + options.botInfo._id + '/activetheme';
                 },
                 error: function (err) {

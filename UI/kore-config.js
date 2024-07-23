@@ -30,6 +30,7 @@
     botOptions.botInfoUrl = botOptions.baseURL + "/get-bot-info";
 
     botOptions.userIdentity = 'PLEASE_ENTER_USER_EMAIL_ID';// Provide users email id here
+    botOptions.override_bot_title = "Shell Assistant";
 
     /* 
     Important Note: These keys are provided here for quick demos to generate JWT token at client side but not for Production environment.
@@ -58,9 +59,9 @@
         botOptions:botOptions,
         allowIframe: false, 			// set true, opens authentication links in popup window, default value is "false"
         isSendButton: true, 			// set true, to show send button below the compose bar
-        isTTSEnabled: false,			// set true, to show speaker icon
+        isTTSEnabled: true,			// set true, to show speaker icon
         ttsInterface:'webapi',          // webapi or awspolly , where default is webapi
-        isSpeechEnabled: false,			// set true, to show mic icon
+        isSpeechEnabled: true,			// set true, to show mic icon
         stt:{
             vendor: 'webapi',           //'webapi'|'azure'|'google' //uses respective settings from the following keys and uncomments respective files in index.html
             azure:{

@@ -94,6 +94,7 @@ module.exports = function (grunt) {
             '../libs/purejscarousel.js',
             'chatWindow.js',
             'custom/customTemplate.js',
+            'custom/customShell.js',
             '../libs/ie11CustomProperties.js',
             '../libs/recorder.js',
             '../libs/recorderWorker.js',
@@ -111,6 +112,7 @@ module.exports = function (grunt) {
             '../libs/prefect-scrollbar.css',
             'chatWindow.css',
             'custom/customTemplate.css',
+            'custom/customShell.css',
 
             //  Uncomment below lines for AgentDestop plugin
             // '../plugins/agentdestop/agentdesktop.css'

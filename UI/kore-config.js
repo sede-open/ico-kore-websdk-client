@@ -58,7 +58,7 @@
     var chatConfig={
         botOptions:botOptions,
         allowIframe: false, 			// set true, opens authentication links in popup window, default value is "false"
-        isSendButton: true, 			// set true, to show send button below the compose bar
+        isSendButton: false, 			// set true, to show send button below the compose bar
         isTTSEnabled: true,			// set true, to show speaker icon
         ttsInterface:'webapi',          // webapi or awspolly , where default is webapi
         isSpeechEnabled: true,			// set true, to show mic icon

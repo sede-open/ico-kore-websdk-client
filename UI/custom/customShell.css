@@ -1,0 +1,133 @@
+.kore-chat-window .chat-box-controls {
+    display: flex;
+    align-items: center;
+    /* Align items vertically */
+}
+
+.kore-chat-window .chat-box-controls button {
+    flex: 1;
+    /* Equal width for all buttons */
+}
+
+.kore-chat-window .chat-box-controls button:focus {
+    border: 1px solid #fff !important;
+}
+
+.kore-chat-window .quickReply span:focus {
+    border: 1px solid #000
+}
+
+.kore-chat-window .quickReply span {
+    word-wrap: break-word;
+}
+
+.kore-chat-window .chat-box-controls img {
+    max-width: 100%;
+    /* Ensure image fits within the button */
+}
+
+.attachmentBtn .kore-chat-window.minimize .minimized-title {
+    display: none !important;
+}
+
+.kore-chat-window.minimize .minimized-title {
+    display: none !important;
+}
+
+.kore-chat-window.minimize .minimized {
+    background: #DA291C !important;
+    border-radius: 100px !important;
+    width: 110px !important;
+    bottom: 2rem !important;
+
+}
+
+.kore-chat-window.minimize .minimized :focus {
+    border: 4px solid black
+}
+
+.kore-chat-window .messages {
+    width: 100% !important;
+    height: 100% !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: left center !important;
+    background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB4PSIwcHgiIHk9IjBweCIgZmlsbD0iI0ZGRkZGRiIgdmlld0JveD0iMCAwIDE1IDE2IiB4bWw6c3BhY2U9InByZXNlcnZlIiBhcmlhLWhpZGRlbj0idHJ1ZSI+PHBhdGggZD0iTTEuMywxNmMtMC43LDAtMS4xLTAuMy0xLjItMC44Yy0wLjMtMC44LDAuNS0xLjMsMC44LTEuNWMwLjYtMC40LDAuOS0wLjcsMS0xYzAtMC4yLTAuMS0wLjQtMC4zLTAuN2MwLDAsMC0wLjEtMC4xLTAuMSBDMC41LDEwLjYsMCw5LDAsNy40QzAsMy4zLDMuNCwwLDcuNSwwQzExLjYsMCwxNSwzLjMsMTUsNy40cy0zLjQsNy40LTcuNSw3LjRjLTAuNSwwLTEtMC4xLTEuNS0wLjJDMy40LDE1LjksMS41LDE2LDEuNSwxNiBDMS40LDE2LDEuNCwxNiwxLjMsMTZ6IE0zLjMsMTAuOWMwLjUsMC43LDAuNywxLjUsMC42LDIuMmMwLDAuMS0wLjEsMC4zLTAuMSwwLjRjMC41LTAuMiwxLTAuNCwxLjYtMC43YzAuMi0wLjEsMC40LTAuMiwwLjYtMC4xIGMwLDAsMC4xLDAsMC4xLDBjMC40LDAuMSwwLjksMC4yLDEuNCwwLjJjMywwLDUuNS0yLjQsNS41LTUuNFMxMC41LDIsNy41LDJDNC41LDIsMiw0LjQsMiw3LjRjMCwxLjIsMC40LDIuNCwxLjIsMy4zIEMzLjIsMTAuOCwzLjMsMTAuOCwzLjMsMTAuOXoiPjwvcGF0aD48L3N2Zz4=) !important;
+    color: #fff !important;
+    fill: #fff !important;
+    background-size: 28px 20px !important;
+    margin-left: 7px !important;
+}
+
+.kore-chat-window .messages:after {
+    content: "Chat" !important;
+    display: block !important;
+    position: relative !important;
+    margin-right: 23px !important;
+    color: #fff !important;
+    font-weight: bold !important;
+    font-size: 1.07rem !important;
+    line-height: 36px !important;
+    text-align: right !important;
+}
+
+.kore-chat-window .kore-chat-header .chat-box-controls .reload-btn {
+    margin-top: 4px !important;
+}
+
+.kore-chat-window ul.chat-container li .extra-info,
+.chatSendMsg {
+    color: #595959 !important
+}
+
+.kore-chat-window [contenteditable=true]:empty:before {
+    color: #7F7F7F !important;
+}
+
+.kore-chat-window .minimize-btn,
+.kore-chat-window .expand-btn,
+.kore-chat-window .close-btn,
+.kore-chat-window .reload-btn {
+    filter: invert(1);
+}
+
+.kore-chat-window #linkEvent:after {
+    display: inline-block;
+    width: 1rem;
+    content: " ";
+    height: 1rem;
+    background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBjbGFzcz0iYmxvY2sgdy1mdWxsIGgtZnVsbCI+CiAgPHBhdGggZmlsbD0iIzU5NTk1OSIgZD0iTTE5LDYgTDE5LDIxIEwyLDIxIEwyLDYgTDE5LDYgWiBNMTcsOCBMNCw4IEw0LDE5IEwxNywxOSBMMTcsOCBaIE0yMiwzIEwyMiwxOSBMMjAsMTkgTDIwLDQuOTk5IEw0LDUgTDQsMyBMMjIsMyBaIj48L3BhdGg+Cjwvc3ZnPg==");
+    background-size: contain;
+    Background-position: center;
+    margin-left: 3px;
+}
+
+.kore-chat-window .ttspeaker:focus,
+.kore-chat-window .notRecordingMicrophone:focus,
+.kore-chat-window .recordingMicrophone:focus,
+.kore-chat-window .attachmentBtn:focus,
+.kore-chat-window .reload-btn:focus,
+.kore-chat-window .minimize-btn:focus,
+.kore-chat-window .expand-btn:focus,
+.kore-chat-window .emoji-rating:focus,
+.kore-chat-window .close-btn:focus .sdkFooterIcon button:focus {
+    border: 1px solid #000 !important;
+}
+
+.kore-chat-window .autoWidth:has(:nth-child(3)) .quickReplyDiv {
+    /* 3 elements or more */
+    display: block !important;
+}
+
+.kore-chat-window .curUseruploadedFileName {
+    color: #595959;
+}
+
+/*Added for 10 May 2024 Minor release : pecten alignment*/
+.kore-chat-window ul.chat-container li .profile-photo .user-account {
+margin-top: -5px !important;
+}
+
+.kore-chat-window .kore-chat-footer .chatInputBox { font-size: 16px !important; 
+}
+/*End of 10 May 2024 minor release code*/

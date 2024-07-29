@@ -72,9 +72,9 @@
                 "ppsx", "ppsm", "sldx", "sldm", "zip", "rar", "tar", "wpd", "wps", "rtf", "msg", "dat", "sdf", "vcf", "xml", "3ds", "3dm", "max", "obj", "ai", "eps", "ps", "svg", "indd", "pct", "accdb",
                 "db", "dbf", "mdb", "pdb", "sql", "apk", "cgi", "cfm", "csr", "css", "htm", "html", "jsp", "php", "xhtml", "rss", "fnt", "fon", "otf", "ttf", "cab", "cur", "dll", "dmp", "drv", "7z", "cbr",
                 "deb", "gz", "pkg", "rpm", "zipx", "bak", "avi", "m4v", "mpg", "rm", "swf", "vob", "wmv", "3gp2", "3g2", "asf", "asx", "srt", "wma", "mid", "aif", "iff", "m3u", "mpa", "ra", "aiff", "tiff",
-                "log"];
+                "log", "heic"];
             appConsts.CHUNK_SIZE = 1024 * 1024;
-            var filetypes = {}, audio = ['m4a', 'amr', 'wav', 'aac', 'mp3'], video = ['mp4', 'mov', '3gp', 'flv'], image = ['png', 'jpg', 'jpeg','gif'];
+            var filetypes = {}, audio = ['m4a', 'amr', 'wav', 'aac', 'mp3'], video = ['mp4', 'mov', '3gp', 'flv'], image = ['png', 'jpg', 'jpeg','gif', "heic"];
             filetypes.audio = audio;
             filetypes.video = video;
             filetypes.image = image;
@@ -5098,14 +5098,30 @@
                             if (_file.type.indexOf('image') !== (-1)) {
                                 var imgRd = new FileReader();
                                 imgRd.onload = function (e) {
-                                    var blob = new Blob([e.target.result], { type: _file.type }), // create a blob of buffer
-                                        url = (URL || webkitURL).createObjectURL(blob); // create o-URL of blob
-                                    var img = new Image();
-                                    img.src = url;
-                                    img.onload = function () {
-                                        recState.resulttype = getDataURL(img);
-                                        getFileToken(_this, _file, recState);
+                                    var processImage = function (blob) {
+                                        var url = (URL || webkitURL).createObjectURL(blob); // create o-URL of blob
+                                        var img = new Image();
+                                        img.src = url;
+                                        img.onload = function () {
+                                            recState.resulttype = getDataURL(img);
+                                            getFileToken(_this, _file, recState);
+                                        };
                                     };
+
+                                    if (_file.type === 'image/heic') {
+                                        heic2any({
+                                            blob: new Blob([e.target.result], { type: _file.type }),
+                                            toType: 'image/jpeg',
+                                        }).then((conversionResult) => {
+                                            console.log(_file);
+                                            console.log(conversionResult);
+                                            processImage(conversionResult);
+                                            _file = conversionResult;
+                                        });
+                                    } else {
+                                        var blob = new Blob([e.target.result], { type: _file.type }); // create a blob of buffer
+                                        processImage(blob);
+                                    }
                                 };
                                 imgRd.readAsArrayBuffer(_file);
                             }
@@ -5275,6 +5291,7 @@
                 _scope.removeCmpt(_recState);
             };
             function onError() {
+                console.log(attachmentInfo);
                 alert("Failed to upload content. Try again");
                 attachmentInfo = {};
                 $('.attachment').html('');

@@ -1,0 +1,179 @@
+name: Get new changes in Kore WebSDK Repo
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+on:
+  schedule:
+    - cron: '0 0 * * 0' # Runs weekly on Sunday at midnight
+  push:
+    branches: master # Runs on pushes targeting the default branch
+  workflow_dispatch: # Allows manual triggering of the workflow
+
+jobs:
+  check-new-release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Kore WebSDK Branch on current Repo
+      uses: actions/checkout@v2
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        ref: kore-web-sdk
+
+
+    - name: Set up Git user
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+    - name: Check for new release in Kore WebSDK Repo
+      id: check_release
+      uses: actions/github-script@v4
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const repo = 'Koredotcom/web-kore-sdk';
+          const currentRepo = context.repo.repo;
+          const currentOwner = context.repo.owner;
+          const branch = 'kore-web-sdk';
+
+          // Fetch the latest commit from the kore-web-sdk branch in the current repository
+          const latestCommit = await github.repos.listCommits({
+            owner: currentOwner,
+            repo: currentRepo,
+            sha: branch,
+            per_page: 1 // Get only the latest commit
+          });
+
+          const latestCommitSha = latestCommit.data.length > 0 ? latestCommit.data[0].sha : null;
+
+          // Fetch all tags from the Koredotcom/web-kore-sdk repository
+          const allTags = await github.repos.listTags({
+            owner: repo.split('/')[0],
+            repo: repo.split('/')[1],
+            per_page: 100 // Adjust as needed
+          });
+
+          // Filter tags to include only those starting with 'v2-10.'
+          const filteredTags = allTags.data
+            .filter(tag => tag.name.startsWith('v2-10.'))
+            .sort((a, b) => {
+              const aCommit = a.commit ? a.commit.committer : null;
+              const bCommit = b.commit ? b.commit.committer : null;
+              if (!aCommit || !bCommit) return 0;
+              return new Date(bCommit.date) - new Date(aCommit.date);
+            });
+
+          // Get the latest tag starting with 'v2-10.'
+          const latestTag = filteredTags.length > 0 ? filteredTags[0] : null;
+
+          // Determine the corresponding branch name
+          const branchName = latestTag ? `web-sdk-${latestTag.name.replace('v2-', '')}` : '';
+
+          // Fetch the latest commit from the corresponding branch
+          const latestBranchCommit = await github.repos.listCommits({
+            owner: repo.split('/')[0],
+            repo: repo.split('/')[1],
+            sha: branchName,
+            per_page: 1 // Get only the latest commit
+          });
+          const latestBranchCommitSha = latestBranchCommit.data.length > 0 ? latestBranchCommit.data[0].sha : null;
+
+          // Set the output based on whether there is a new commit
+          core.setOutput('new_release', latestCommitSha && latestCommitSha !== latestBranchCommitSha ? latestTag.name.replace('v2-', '') : '');
+          core.setOutput('branch_name', branchName);
+
+          // Print new branch name if a new release is found
+          console.log("Current commit SHA: " + latestCommitSha);
+          console.log("Latest release commit SHA: " + latestBranchCommitSha);
+          if (latestCommitSha && latestCommitSha !== latestBranchCommitSha) {
+            console.log(`New release found: ${latestTag.name.replace('v2-', '')}`);
+            console.log(`Branch name: ${branchName}`);
+          }
+
+    - name: Add Kore WebSDK Repo as remote and merge changes
+      if: steps.check_release.outputs.new_release != ''
+      run: |
+        git remote add upstream https://github.com/Koredotcom/web-kore-sdk.git
+        git fetch upstream
+        git merge upstream/${{ steps.check_release.outputs.branch_name }}
+        git remote remove upstream
+
+    - name: Create GitHub Issue for Merge Conflicts
+      if: failure()
+      uses: actions/github-script@v4
+      env:
+        ISSUE_BODY: |
+          There were merge conflicts when trying to merge the latest Kore WebSDK Release.
+          Please resolve the conflicts and merge the changes manually.
+
+          **Steps to Merge Changes:**
+          - [ ] Clone the current repository locally (git clone <repository-url>)
+          - [ ] Checkout the kore-web-sdk branch (git checkout kore-web-sdk)
+          - [ ] Add the Kore WebSDK repository as a remote (git remote add upstream https://github.com/Koredotcom/web-kore-sdk.git)
+          - [ ] Fetch the latest changes from the Kore WebSDK repository (git fetch upstream)
+          - [ ] Merge the changes from the Kore WebSDK repository (git merge upstream/kore-web-sdk)
+          - [ ] Resolve any merge conflicts and ensure the codebase is working as expected
+          - [ ] Commit the changes (git commit -m "Merge changes from Kore WebSDK")
+          - [ ] Pull the latest changes (git pull origin kore-web-sdk)
+          - [ ] Review the changes in the codebase to ensure changes are compatible with our existing code
+          - [ ] Push the changes to the repository (git push origin kore-web-sdk)
+          - [ ] Perform a smoke test to ensure the WebSDK is working as expected
+          - [ ] Create a pull request to merge the changes from kore-web-sdk to master
+          - [ ] Select *Rebase and merge* to merge the changes
+          
+          _This PR was created automatically by a GitHub Actions workflow._
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const issueTitle = `Merge Conflict in Kore WebSDK Release: ${{ steps.check_release.outputs.new_release }}`;
+          const issueBody = `${{ env.ISSUE_BODY }}`;
+          await github.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: issueTitle,
+            body: issueBody
+          });
+
+    - name: Push changes to kore-web-sdk branch in current repo
+      if: steps.check_release.outputs.new_release != ''
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        git push origin kore-web-sdk
+        git fetch origin
+
+    - name: Checkout master branch for PR
+      if: steps.check_release.outputs.new_release != ''
+      uses: actions/checkout@v2
+      with:
+        ref: master
+
+    - name: Reset kore-web-sdk branch to make sure there are no conflicts
+      if: steps.check_release.outputs.new_release != ''
+      run: |
+        git fetch origin kore-web-sdk:kore-web-sdk
+        git reset --hard kore-web-sdk
+
+    - name: Create Pull Request
+      if: steps.check_release.outputs.new_release != ''
+      uses: peter-evans/create-pull-request@v6
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        branch: kore-web-sdk-${{ steps.check_release.outputs.new_release }}
+        title: 'New WebSDK release from Kore: ${{ steps.check_release.outputs.new_release }}'
+        body: |
+          Kore has released a new version of WebSDK. This PR updates the base WebSDK code in our repository to the latest version. 
+          
+          Please review the changes and ensure everything is working before merging the changes.
+
+          **Steps to Review:**
+          - [ ] Check for any merge conflicts
+          - [ ] Review the changes in the codebase to ensure changes are compatible with our existing code
+          - [ ] Perform a smoke test to ensure the WebSDK is working as expected
+          - [ ] Select *Rebase and merge* to merge the changes
+          
+          _This PR was created automatically by a GitHub Actions workflow._
+        labels: 'kore-web-sdk-update'
+        assignees: 'sede-x/ico-kore-admin'

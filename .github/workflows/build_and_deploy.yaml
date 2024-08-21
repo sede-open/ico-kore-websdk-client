@@ -45,8 +45,12 @@ jobs:
       working-directory: UI
       run: grunt
 
-    - name: Copy index_minified.html to dist
-      run: cp UI/index_minified.html UI/dist/index.html
+    - name: Copy index_minified.html to dist with pages for different languages
+      run: |
+        cp UI/index_minified.html UI/dist/index.html
+        cp UI/index_minified.html UI/dist/gb.html
+        cp UI/index_minified.html UI/dist/de.html
+        cp UI/index_minified.html UI/dist/tr.html
 
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3

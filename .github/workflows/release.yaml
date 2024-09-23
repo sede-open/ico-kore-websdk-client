@@ -1,9 +1,13 @@
 name: Release
 
 on:
-  # Runs when a release is created
-  release:
-    types: [created]
+  # # Runs when a release is created
+  # release:
+  #   types: [created]
+  # Runs when a commit is tagged
+  push:
+    tags:
+      - 'v*.*.*'
 
 jobs:
   # Build job

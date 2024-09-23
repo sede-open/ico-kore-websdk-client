@@ -57,23 +57,11 @@ jobs:
         with:
           node-version: '16'
 
-      - name: Fetch Release Notes
-        id: fetch_release_notes
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const { data: release } = await github.repos.getReleaseByTag({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              tag: context.payload.release.tag_name
-            });
-            return release.body;
-        
       - name: Update CHANGELOG
         id: update_changelog
         run: |
           echo "## [${{ github.event.release.tag_name }}](${{ github.event.release.html_url }})" >> CHANGELOG.md
-          echo "${{ steps.fetch_release_notes.outputs.result }}" >> CHANGELOG.md
+          echo "${{ github.event.release.body }}" >> CHANGELOG.md
           git config --global user.name 'github-actions'
           git config --global user.email 'github-actions@github.com'
           git add CHANGELOG.md

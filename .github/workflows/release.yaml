@@ -1,9 +1,6 @@
 name: Release
 
 on:
-  # # Runs when a release is created
-  # release:
-  #   types: [created]
   # Runs when a commit is tagged
   push:
     tags:
@@ -21,87 +18,95 @@ jobs:
       environment: ${{ matrix.environment }}
     secrets: inherit
 
-  # # Deploy to Azure UAT job
-  # deploy-azure-uat:
-  #   needs: build
-  #   uses: ./.github/workflows/deploy_to_azure.yaml
-  #   with:
-  #     build_name: uat-build-${{ github.ref_name }}
-  #     environment: uat
-  #   secrets: inherit
-
   # Create GitHub release job
-  create-release:
+  create-draft-release:
     needs: ['build'] #, 'deploy-azure-uat']
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download Dev Build
+      - name: Create draft release
+        id: create_draft_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Draft Release ${{ github.ref_name }}
+          body: |
+            Draft Release ${{ github.ref_name }}
+          draft: true
+          prerelease: false
+
+  upload-release-assets:
+    needs: ['create-draft-release']
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: ['dev', 'uat', 'prod']
+    steps:
+      - name: Download ${{ matrix.environment }} Build
         uses: actions/download-artifact@v4
         with:
-          name: dev-build-${{ github.ref_name }}
-          path: ./dev
+          name: ${{ matrix.environment }}-build-${{ github.ref_name }}
+          path: ./${{ matrix.environment }}
 
-      - name: Download UAT Build
-        uses: actions/download-artifact@v4
-        with:
-          name: uat-build-${{ github.ref_name }}
-          path: ./uat
-
-      - name: Download Prod Build
-        uses: actions/download-artifact@v4
-        with:
-          name: prod-build-${{ github.ref_name }}
-          path: ./prod
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '20'
-
-      # - name: Update CHANGELOG
-      #   id: update_changelog
-      #   run: |
-      #     echo "## [${{ github.event.release.tag_name }}](${{ github.event.release.html_url }})" >> CHANGELOG.md
-      #     echo "${{ github.event.release.body }}" >> CHANGELOG.md
-      #     git config --global user.name 'github-actions'
-      #     git config --global user.email 'github-actions@github.com'
-      #     git add CHANGELOG.md
-      #     git commit -m "Add changes for ${{ github.event.release.tag_name }} release"
-      #     git push origin HEAD:master
-
-      - name: Upload Dev Build
+      - name: Upload ${{ matrix.environment }} Build
+        if: success()
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dev/dev-build-${{ github.ref_name }}.zip
-          asset_name: dev-build-${{ github.ref_name }}.zip
+          upload_url: ${{ steps.create_draft_release.outputs.upload_url }}
+          asset_path: ./${{ matrix.environment }}/${{ matrix.environment }}-build-${{ github.ref_name }}.zip
+          asset_name: ${{ matrix.environment }}-build-${{ github.ref_name }}.zip
           asset_content_type: application/zip
 
-      - name: Upload UAT Build
-        uses: actions/upload-release-asset@v1
+  # Publish release job
+  publish-release:
+    needs: ['upload-release-assets']
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish release
+        if: success()
+        uses: actions/github-script@v6
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./uat/uat-build-${{ github.ref_name }}.zip
-          asset_name: uat-build-${{ github.ref_name }}.zip
-          asset_content_type: application/zip
+          script: |
+            const release_id = ${{ steps.create_release.outputs.id }};
+            await github.repos.updateRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id,
+              draft: false
+            });
 
-      - name: Upload Prod Build
-        uses: actions/upload-release-asset@v1
+      - name: Delete draft release if failed
+        if: failure()
+        uses: actions/github-script@v6
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./prod/prod-build-${{ github.ref_name }}.zip
-          asset_name: prod-build-${{ github.ref_name }}.zip
-          asset_content_type: application/zip
-      
-      - name: Create release using release publisher
-        uses: ./.github/workflows/release_publisher.yaml
-    
+          script: |
+            const release_id = ${{ steps.create_release.outputs.id }};
+            await github.repos.deleteRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id
+            });
+            await github.git.deleteRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: `tags/${{ github.ref_name }}`
+            });      
+
+  # Deploy to Azure UAT job
+  deploy-azure-uat:
+    needs: ["build", "publish-release"]
+    uses: ./.github/workflows/deploy_to_azure.yaml
+    with:
+      build_name: uat-build-${{ github.ref_name }}
+      environment: uat
+    secrets: inherit

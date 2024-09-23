@@ -8,10 +8,8 @@ permissions:
 
 jobs:
   publish_release:
-	# Prevent accidental deployment on forks
     if: github.repository == 'sede-open/ico-kore-websdk-client' 
     permissions:
-      # Write permission is required to publish a GitHub release
       contents: write
       pull-requests: read
     runs-on: ubuntu-latest

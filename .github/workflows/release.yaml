@@ -33,9 +33,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref_name }}
-          release_name: Draft Release ${{ github.ref_name }}
+          release_name: ${{ github.ref_name }} Release
           body: |
-            Draft Release ${{ github.ref_name }}
+            ## Changes
+            
           draft: true
           prerelease: false
 

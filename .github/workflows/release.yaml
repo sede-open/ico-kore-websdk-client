@@ -83,7 +83,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           script: |
-            const release_id = ${{ needs.create_draft_release.outputs.id }}
+            const release_id = ${{ needs.create-draft-release.outputs.id }}
             await github.repos.updateRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,

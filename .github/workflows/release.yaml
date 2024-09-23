@@ -39,6 +39,8 @@ jobs:
 
           draft: true
           prerelease: false
+    outputs:
+      upload_url: ${{ steps.create_draft_release.outputs.upload_url }}
 
   upload-release-assets:
     needs: ['create-draft-release']
@@ -66,7 +68,7 @@ jobs:
 
   # Publish release job
   publish-release:
-    needs: ['upload-release-assets']
+    needs: ['create-draft-release']
     runs-on: ubuntu-latest
     steps:
       - name: Publish release

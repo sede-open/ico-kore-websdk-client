@@ -1,0 +1,70 @@
+name: Build
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        description: 'The environment to build for'
+        type: string
+
+  workflow_dispatch:
+    inputs:
+      environment:
+        required: true
+        description: 'The environment to build for'
+        type: choice
+        default: 'dev'
+        options:
+          - 'dev'
+          - 'uat'
+          - 'prod'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    outputs:
+      artifact_name: ${{ steps.upload-artifact.outputs.artifact_name }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '16'
+
+      - name: Install dependencies
+        working-directory: UI
+        run: |
+          npm install
+          npm install -g grunt-cli
+          npm install grunt --save-dev
+
+      - name: Run Grunt
+        working-directory: UI
+        run: grunt
+
+      - name: Copy index_minified.html to dist with pages for different languages
+        run: |
+          cp UI/index_minified.html UI/dist/index.html
+          cp UI/index_minified.html UI/dist/gb.html
+          cp UI/index_minified.html UI/dist/de.html
+          cp UI/index_minified.html UI/dist/tr.html
+
+      - name: Determine version or commit SHA
+        id: determine-version
+        run: |
+          VERSION_TAG=$(git describe --tags --exact-match 2>/dev/null | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+.*$' || echo "")
+          if [ -z "$VERSION_TAG" ]; then
+            VERSION_TAG=$(git rev-parse --short HEAD)
+          fi
+          echo "VERSION_TAG=$VERSION_TAG" >> $GITHUB_ENV
+
+      - name: Upload artifact for deployment
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.environment }}-build-${{ env.VERSION_TAG }}
+          path: ./UI/dist

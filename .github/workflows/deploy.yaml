@@ -1,0 +1,39 @@
+name: Deploy
+
+on:
+  # Runs on pushes targeting the default branch
+  push:
+    branches: 
+      - master
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+env:
+  ENVIRONMENT: dev
+
+jobs:
+  # Build job
+  build:
+    uses: ./.github/workflows/build.yaml
+    with:
+      environment: dev
+    secrets: inherit
+
+  # Deploy to GitHub Pages job
+  deploy-github-pages:
+    needs: build
+    uses: ./.github/workflows/deploy_to_github_pages.yaml
+    with:
+      environment: dev
+      build_name: ${{ github.job.build.outputs.build_name }}
+    secrets: inherit
+
+  # Deploy to Azure job
+  deploy-azure-dev:
+    needs: build
+    uses: ./.github/workflows/deploy_to_azure.yaml
+    with:
+      environment: dev
+      build_name: ${{ github.job.build.outputs.build_name }}
+    secrets: inherit

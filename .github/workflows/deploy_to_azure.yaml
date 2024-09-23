@@ -1,0 +1,74 @@
+name: Deploy to Azure Container
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        description: 'The environment to deploy to'
+        type: string
+      build_name:
+        description: 'The name of the build artifact'
+        required: true
+        type: string
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+    inputs:
+      environment:
+        required: true
+        description: 'The environment to deploy to'
+        type: choice
+        default: 'dev'
+        options:
+          - 'dev'
+          - 'uat'
+          - 'prod'
+      build_name:
+        description: 'The name of the build artifact'
+        required: true
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to Azure Container
+permissions:
+  contents: read
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "azure-${{ inputs.environment }}"
+  cancel-in-progress: false
+
+jobs:
+  # Deploy to Azure job
+  deploy-azure:
+    environment: ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.build_name }}
+          path: ./output
+
+      - name: Azure authentication
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Azure CLI script
+        uses: azure/cli@v2
+        with:
+          azcliversion: latest
+          inlineScript: |
+            az storage blob upload-batch \
+              --account-name ${{ vars.AZURE_STORAGE_ACCOUNT_NAME }} \
+              --destination ${{ vars.AZURE_STORAGE_CONTAINER_NAME }} \
+              --source ./output/${{ inputs.build_name }}/* \
+              --auth-mode login \
+              --overwrite

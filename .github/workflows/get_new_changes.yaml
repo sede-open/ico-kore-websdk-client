@@ -6,8 +6,6 @@ permissions:
 on:
   schedule:
     - cron: '0 0 * * 0' # Runs weekly on Sunday at midnight
-  push:
-    branches: master # Runs on pushes targeting the default branch
   workflow_dispatch: # Allows manual triggering of the workflow
 
 jobs:

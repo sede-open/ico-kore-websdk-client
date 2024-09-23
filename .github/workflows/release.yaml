@@ -55,18 +55,18 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '16'
+          node-version: '20'
 
-      - name: Update CHANGELOG
-        id: update_changelog
-        run: |
-          echo "## [${{ github.event.release.tag_name }}](${{ github.event.release.html_url }})" >> CHANGELOG.md
-          echo "${{ github.event.release.body }}" >> CHANGELOG.md
-          git config --global user.name 'github-actions'
-          git config --global user.email 'github-actions@github.com'
-          git add CHANGELOG.md
-          git commit -m "Add changes for ${{ github.event.release.tag_name }} release"
-          git push origin HEAD:master
+      # - name: Update CHANGELOG
+      #   id: update_changelog
+      #   run: |
+      #     echo "## [${{ github.event.release.tag_name }}](${{ github.event.release.html_url }})" >> CHANGELOG.md
+      #     echo "${{ github.event.release.body }}" >> CHANGELOG.md
+      #     git config --global user.name 'github-actions'
+      #     git config --global user.email 'github-actions@github.com'
+      #     git add CHANGELOG.md
+      #     git commit -m "Add changes for ${{ github.event.release.tag_name }} release"
+      #     git push origin HEAD:master
 
       - name: Upload Dev Build
         uses: actions/upload-release-asset@v1
@@ -97,3 +97,7 @@ jobs:
           asset_path: ./prod/prod-build-${{ github.ref_name }}.zip
           asset_name: prod-build-${{ github.ref_name }}.zip
           asset_content_type: application/zip
+      
+      - name: Create release using release publisher
+        uses: ./.github/workflows/release_publisher.yaml
+    

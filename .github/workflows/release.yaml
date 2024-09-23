@@ -78,13 +78,13 @@ jobs:
     steps:
       - name: Publish release
         if: success()
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           script: |
             const release_id = ${{ needs.create-draft-release.outputs.id }}
-            await github.repos.updateRelease({
+            await github.rest.repos.updateRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
               release_id,
